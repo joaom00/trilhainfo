@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useId, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import MainLayout from "../components/layouts/MainLayout";
 import useDocumentTitle from "../components/useDocumentTitle";
 import { roadmaps } from "../roadmaps/roadmaps";
@@ -23,6 +23,12 @@ import {
   CheckboxGroup,
   Flex,
   Spacer,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
+  Link as ChakraLink,
 } from "@chakra-ui/react";
 import { getColorFromContentType } from "../support/contentType";
 import { emojisplosion } from "emojisplosion";
@@ -31,6 +37,9 @@ import { CheckIcon } from "@chakra-ui/icons";
 import HorizontalLevelItem from "../components/HorizontalRoadmap/HorizontalLevelItem/HorizontalLevelItem";
 import HorizontalRoadmapFooter from "../components/HorizontalRoadmap/HorizontalRoadmapFooter/HorizontalRoadmapFooter";
 import Note from "../components/Note/Note";
+import { AnimatePresence, motion } from "framer-motion";
+import React from "react";
+import Header from "../components/Header/Header";
 
 export default function HorizontalRoadmapPage() {
   const { name } = useParams<string>();
@@ -182,135 +191,153 @@ export default function HorizontalRoadmapPage() {
   }
 
   return (
-    <MainLayout>
-      <div className="m-auto h-full flex flex-col w-11/12">
-      <h1 className="m-auto mt-8 text-center txt-title text-4xl text-yellow xl:hidden">
-              {roadmaps[name || ""].title}
-            </h1>
-        <div className="flex flex-col xl:flex-row">
-          <div className="w-full xl:w-1/4 flex-col">
-            <div className="flex-col my-8 space-y-4">
-              <HorizontalLevelItem
-                checkAllContent={checkAllContent}
-                isAllContentRead={isAllContentRead}
-                levelsQty={roadmapData?.length || 0}
-                roadmapLevel={roadmapLevel}
-                handleSelectItem={handleSelectItem}
-                index={currentLevelIndex}
-                selectedItem={selectedItem}
-              />
-            </div>
-          </div>
-          {/* Selected Item Content */}
-          <div className="w-full xl:w-2/4 xl:pl-10">
-            <h1 className="m-auto my-8 text-center txt-title text-4xl text-yellow hidden xl:block">
-              {roadmaps[name || ""].title}
-            </h1>
-            {!selectedItem && (
-              <div className="flex h-full ">
-                <p className="m-auto txt-title text-red">
-                  Selecione um Item à esquerda para estudar.
-                </p>
-              </div>
-            )}
-            {selectedItem && (
-              <div className="flex flex-col px-4">
-                <h2 className="txt-title text-2xl text-light-orange">
-                  {selectedItem.label}
-                </h2>
-                <p className="txt-title text-xl text-light-orange mt-2">
-                  {selectedItem.description}
-                </p>
-                <Accordion className="mt-4" allowToggle>
-                  {selectedItem?.children?.map((child, index) => {
-                    const key = child.label + "-" + selectedItem.label;
+    <div className="flex flex-col min-h-screen">
+      <Header />
 
-                    return (
-                      <AccordionItem key={child.label}>
-                        <h2 className="font-semibold">
-                          <AccordionButton color={"#e9dad5"}>
-                            <Box flex="1" textAlign="left">
-                              <CheckboxGroup>
-                                <Checkbox
-                                  className="my-auto mr-2"
-                                  size={"lg"}
-                                  isChecked={isRead(key)}
-                                  onChange={(e) => {
-                                    saveRead(key, e.target.checked);
-                                  }}
-                                ></Checkbox>
-                              </CheckboxGroup>
-                              <span className="text-light-brown txt-title">
-                                {child.label}
-                              </span>
-                            </Box>
-                            <AccordionIcon />
-                          </AccordionButton>
-                        </h2>
-                        <AccordionPanel pb={4}>
-                          {child.links?.length
-                            ? child.links?.map((link, index) => {
-                                return (
-                                  <>
-                                    <Flex className="my-2">
-                                      <a
-                                        href={link.url}
-                                        target="_blank"
-                                        className="text-light-brown hover:underline"
-                                      >
-                                        {link.label}
-                                      </a>
-                                      <Spacer />
-                                      <Badge
-                                        colorScheme={getColorFromContentType(
-                                          link.contentType
-                                        )}
-                                        p={1}
-                                        rounded={"md"}
-                                        className="h-5"
-                                        fontSize="0.6em"
-                                        mr="1"
-                                        cursor={"default"}
-                                      >
-                                        <span>
-                                          {link.contentType
-                                            ? link.contentType
-                                            : null}
-                                        </span>
-                                      </Badge>
-                                    </Flex>
-                                  </>
-                                );
-                              })
-                            : "Ainda não possuimos conteúdo."}
-                        </AccordionPanel>
-                      </AccordionItem>
-                    );
-                  })}
-                </Accordion>
-              </div>
-            )}
-          </div>
-          <div className="w-full xl:w-1/4 xl:pl-10">
-            {selectedItem && (
-              <Note
-                id={selectedItem?.label || ""}
-                title={selectedItem?.label || ""}
-              />
-            )}
-          </div>
-        </div>
-        <div className="flex-grow"></div>
-        <div className="flex">
-          <HorizontalRoadmapFooter
-            currentLevelIndex={currentLevelIndex + 1}
-            levelQty={roadmapData?.length}
-            handleNextLevel={handleNextLevel}
-            handlePreviousLevel={handlePreviousLevel}
-            handleNavigateLevel={handleNavigateLevel}
+      <main className="flex-1 flex flex-col w-11/12 mx-auto relative overflow-x-hidden">
+        <AnimatePresence>
+          <LevelComp
+            key={roadmapLevel?.items[0].label}
+            {...(roadmapLevel as Level)}
           />
-        </div>
-      </div>
-    </MainLayout>
+        </AnimatePresence>
+      </main>
+
+      <footer className="text-center py-4 w-full bg-dark-brown select-none mt-auto">
+        <span className="c-brown">Idealizado por </span>
+        <ChakraLink
+          isExternal
+          color={"#ee8561"}
+          href="https://github.com/flaviojmendes"
+        >
+          flaviojmendes
+        </ChakraLink>
+        <span className="c-brown">
+          {" "}
+          e mantido pela{" "}
+          <Link style={{ color: "#ee8561" }} to={"/roadmap/community"}>
+            comunidade
+          </Link>
+          . Esse app foi inspirado em{" "}
+          <a
+            style={{ color: "#ee8561" }}
+            target="_blank"
+            href={"https://roadmap.sh"}
+          >
+            roadmap.sh
+          </a>
+        </span>
+      </footer>
+    </div>
   );
 }
+
+const MotionTabs = motion(Tabs);
+
+const LevelComp = ({ label, description, items }: Level) => {
+  return (
+    <MotionTabs
+      variant="unstyled"
+      className="!flex gap-4 absolute inset-0 mt-8"
+      initial={{ x: 200, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: -200, opacity: 0 }}
+    >
+      <TabList className="flex !flex-col items-center gap-4 max-w-[308px] w-full">
+        <p className="text-yellow txt-title text-xl text-center">{label}</p>
+        <p className="text-yellow txt-title text-center">{description}</p>
+        <div className="flex flex-col gap-2 w-full">
+          {items?.map((item, index) => (
+            <Tab
+              key={index}
+              className="border-2 flex !justify-start w-fit xl:w-full bg-light-brown border-red p-2 xl:p-4 pl-1 cursor-pointer hover:bg-white rounded-md min-h-[64px]"
+            >
+              <FaRegCircle className="mx-1 hover:text-light-orange hover:fill-light-orange checking" />
+              <p className="ml-1 xl:ml-2 txt-title text-xl">{item.label}</p>
+              <p className="txt-title text-xl ml-auto">{">>"}</p>
+            </Tab>
+          ))}
+        </div>
+      </TabList>
+      <TabPanels className="">
+        {items?.map((item, index) => (
+          <TabPanel key={index} className="">
+            <div className="flex flex-col px-4">
+              <h2 className="txt-title text-2xl text-light-orange">
+                {item.label}
+              </h2>
+              <p className="txt-title text-xl text-light-orange mt-2">
+                {item.description}
+              </p>
+              <Accordion className="mt-4" allowToggle>
+                {item?.children?.map((child) => {
+                  return (
+                    <AccordionItem key={child.label}>
+                      <h2 className="font-semibold">
+                        <AccordionButton color={"#e9dad5"}>
+                          <Box flex="1" textAlign="left">
+                            <CheckboxGroup>
+                              <Checkbox
+                                className="my-auto mr-2"
+                                size={"lg"}
+                                /* isChecked={isRead(key)} */
+                                /* onChange={(e) => { */
+                                /*   saveRead(key, e.target.checked); */
+                                /* }} */
+                              ></Checkbox>
+                            </CheckboxGroup>
+                            <span className="text-light-brown txt-title">
+                              {child.label}
+                            </span>
+                          </Box>
+                          <AccordionIcon />
+                        </AccordionButton>
+                      </h2>
+                      <AccordionPanel pb={4}>
+                        {child.links?.length
+                          ? child.links?.map((link, index) => {
+                              return (
+                                <React.Fragment key={index}>
+                                  <Flex className="my-2">
+                                    <a
+                                      href={link.url}
+                                      target="_blank"
+                                      className="text-light-brown hover:underline"
+                                    >
+                                      {link.label}
+                                    </a>
+                                    <Spacer />
+                                    <Badge
+                                      colorScheme={getColorFromContentType(
+                                        link.contentType
+                                      )}
+                                      p={1}
+                                      rounded={"md"}
+                                      className="h-5"
+                                      fontSize="0.6em"
+                                      mr="1"
+                                      cursor={"default"}
+                                    >
+                                      <span>
+                                        {link.contentType
+                                          ? link.contentType
+                                          : null}
+                                      </span>
+                                    </Badge>
+                                  </Flex>
+                                </React.Fragment>
+                              );
+                            })
+                          : "Ainda não possuimos conteúdo."}
+                      </AccordionPanel>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
+            </div>
+          </TabPanel>
+        ))}
+      </TabPanels>
+    </MotionTabs>
+  );
+};

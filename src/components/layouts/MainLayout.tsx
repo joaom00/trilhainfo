@@ -22,12 +22,14 @@ export default function MainLayout({ children }: Props) {
 
   return (
     <>
-      <div className="flex flex-col h-screen">
+      <div className="flex flex-col min-h-screen">
         <Header/>
-        <main className="w-full flex-grow py-1 mx-auto mt-0 mb-10">
+
+        <main className="w-full flex-1">
           {children}
         </main>
-        <footer className="text-center py-4 w-full bg-dark-brown select-none">
+
+        <footer className="text-center py-4 w-full bg-dark-brown select-none mt-auto">
           <span className="c-brown">Idealizado por </span>
           <ChakraLink
             isExternal
